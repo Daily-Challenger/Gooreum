@@ -1,0 +1,30 @@
+name: Daily Challenge Notification
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Slack Notification
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          TODAY=$(date +%F)
+          ACTOR="${{ github.actor }}"
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+
+          TEXT="✅ ${TODAY} Completed\n\n👤 ${ACTOR}"
+
+          if [ -n "$COMMIT_MESSAGE" ]; then
+            TEXT="${TEXT}\n\n📝 ${COMMIT_MESSAGE}"
+          fi
+
+          curl -X POST \
+            -H "Content-type: application/json" \
+            --data "{\"text\":\"${TEXT}\"}" \
+            "$WEBHOOK_URL"
